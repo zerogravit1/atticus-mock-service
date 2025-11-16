@@ -1,0 +1,42 @@
+{
+  "name": "atticus-mock-service",
+  "version": "0.1.0",
+  "description": "A low friction mock and replay service for playwright",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "files": [
+    "dist",
+    "README.md"
+  ],
+  "scripts": {
+    "build": "tsc",
+    "dev": "tsc -w"
+  },
+  "bin": {
+    "atticus": "dist/cli.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/zerogravit1/atticus-mock-service.git"
+  },
+  "keywords": [
+    "playwright",
+    "mock"
+  ],
+  "author": "Jonathan Schaffer",
+  "license": "GPL-3.0-only",
+  "bugs": {
+    "url": "https://github.com/zerogravit1/atticus-mock-service/issues"
+  },
+  "homepage": "https://github.com/zerogravit1/atticus-mock-service#readme",
+
+  "dependencies": {
+    "fs-extra": "^11.3.2",
+    "playwright-core": "^1.56.1"
+  },
+  "devDependencies": {
+    "@types/fs-extra": "^11.0.4",
+    "@types/node": "^24.10.1",
+    "typescript": "^5.9.3"
+  }
+}
