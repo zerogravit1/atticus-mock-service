@@ -1,16 +1,30 @@
-export function parseBody(contentType: string, raw: string) {
-  if (contentType.includes('application/json')) {
+export function safeParseJson(raw: string) {
+  try {
+    return JSON.parse(raw);
+  } catch {
+    return undefined;
+  }
+}
+
+export function parseBodyFromContentType(contentType: string | undefined, raw: string) {
+  if (!raw) return { rawBody: '', parseBody: undefined };
+
+  const ct = (contentType ?? '').toLowerCase();
+
+  if (ct.includes('application/json')) {
+    const parsed = safeParseJson(raw);
+
+    return { rawBody: raw, parsedBody: parsed ?? raw };
+  }
+
+  if (ct.includes('application/x-www-form-urlencoded')) {
     try {
-      return JSON.parse(raw);
+      const obj = Object.fromEntries(new URLSearchParams(raw));
+      return { rawBody: raw, parsedBody: obj };
     } catch {
-      return raw;
+      return { rawBody: raw, parsedBody: undefined }
     }
   }
 
-  if (contentType.includes('application/x-www-form-urlencoded')) {
-    return Object.fromEntries(new URLSearchParams(raw));
-  }
-
-  // everything else is too large to parse.
-  return raw;
+  return { rawBody: raw, parsedBody: undefined };
 }

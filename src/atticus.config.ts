@@ -1,6 +1,6 @@
-import { AtticusConfig } from "./types.js";
+import { AtticusOptions } from './types.js';
 
-export const config: AtticusConfig = {
+export const config: AtticusOptions = {
   recordMode: 'auto',
-  mockDirectory: 'mock-data'
+  mockDir: 'mock-data'
 };
