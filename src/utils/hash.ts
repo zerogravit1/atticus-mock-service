@@ -1,7 +1,6 @@
 import crypto from 'crypto';
 
-export function hashRequest(input: unknown): string {
-  return crypto.createHash('sha256')
-  .update(JSON.stringify(input))
-  .digest('hex');
+export function hashObject(input: unknown): string {
+  const json = JSON.stringify(input, Object.keys(input as any).sort());
+  return crypto.createHash('sha256').update(json).digest('hex');
 }

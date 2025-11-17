@@ -4,16 +4,18 @@ export interface StoredResponse {
   body: string;
 }
 
-export interface StoredRequest {
+export interface StoredRequestMeta {
   url: string;
   method: string;
   headers: Record<string, string>
   rawBody: string;
   parsedBody?: unknown;
   signature: string; // hash
+  timestamp?: string;
 }
 
-export interface AtticusConfig {
+export interface AtticusOptions {
+  mockDir: string;
   recordMode: "record" | "replay" | "auto";
-  mockDirectory: string;
+  autoApprove?: boolean;
 }
