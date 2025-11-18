@@ -1,0 +1,15 @@
+{
+  "users": [
+    {
+      "username": "alice",
+      "password": "password",
+      "role": "admin"
+    },
+    {
+      "username": "bob",
+      "password": "password",
+      "role": "editor"
+    }
+  ],
+  "records": []
+}
