@@ -1,5 +1,5 @@
 # Dependencies
-/node_modules
+node_modules/
 package-lock.json
 
 # Logs
@@ -16,9 +16,12 @@ yarn-error.log*
 .env.production.local
 
 # Build artifacts
-/dist
-/build
-/out
+dist/
+build/
+out/
+tmp-mocks-test/
+atticus-mocks/
+coverage/
 
 # Editor/OS specific files
 .DS_Store
