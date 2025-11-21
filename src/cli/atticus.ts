@@ -1,7 +1,7 @@
 #!/usr/bin/env node
-
-import { MockStore } from '../core/MockStore.js';
+/* eslint-disable no-console */
 import { argv } from 'process';
+import { MockStore } from '../core/MockStore.js';
 
 const cmd = argv[2] ?? 'list';
 const dir = argv[3] ?? './atticus-mocks';

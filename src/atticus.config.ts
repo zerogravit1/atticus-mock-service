@@ -1,4 +1,4 @@
-import { AtticusOptions } from './types.js';
+import type { AtticusOptions } from './types.js';
 
 export const config: AtticusOptions = {
   recordMode: 'auto',

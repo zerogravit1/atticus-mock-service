@@ -11,8 +11,9 @@
     "declaration": true,
     "skipLibCheck": true,
     "forceConsistentCasingInFileNames": true,
-    "types": ["node"]
+    "types": ["node"],
+    "preserveSymlinks": false
   },
   "include": ["src"],
-  "exclude": ["src/tests"]
+  "exclude": ["dist", "node_modules"]
 }

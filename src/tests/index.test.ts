@@ -1,7 +1,7 @@
 import { strict as assert } from 'assert';
-import { MockStore } from '../../dist/core/MockStore.js';
 import fs from 'fs';
 import path from 'path';
+import { MockStore } from '../../dist/core/MockStore.js';
 
 const tmpDir = path.resolve('./tmp-mocks-test');
 fs.rmSync(tmpDir, { recursive: true, force: true });

@@ -15,9 +15,11 @@
     "build": "tsc -p tsconfig.json",
     "clean": "rimraf dist",
     "prebuild": "npm run clean",
-    "prepare": "npm run build",
+    "prepare": "husky",
     "dev": "tsc -w -p tsconfig.json",
-    "lint": "echo \"No linter configured\"",
+    "lint": "eslint 'src/**/*.ts'",
+    "lint:fix": "eslint 'src/**/*.ts' --fix",
+    "format": "prettier --write .",
     "test": "node --test",
     "prepublishOnly": "npm run build && npm test",
     "publish:public": "npm publish --access public"
@@ -49,7 +51,15 @@
   "devDependencies": {
     "@types/fs-extra": "^11.0.4",
     "@types/node": "^24.10.1",
-    "typescript": "^5.9.3",
-    "rimraf": "^6.1.0"
+    "@typescript-eslint/eslint-plugin": "^8.47.0",
+    "@typescript-eslint/parser": "^8.47.0",
+    "eslint": "^8.57.1",
+    "eslint-config-airbnb-base": "^15.0.0",
+    "eslint-config-prettier": "^10.1.8",
+    "eslint-import-resolver-typescript": "^4.4.4",
+    "eslint-plugin-import": "^2.32.0",
+    "prettier": "^3.6.2",
+    "rimraf": "^6.1.0",
+    "typescript": "^5.9.3"
   }
 }

@@ -1,3 +1,5 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
+
 import type { Route, Request as PWRequest, Page } from 'playwright-core';
 import type { AtticusOptions, StoredRequestMeta, StoredResponse } from '../types.js';
 import { MockStore } from './MockStore.js';
@@ -7,7 +9,9 @@ import { logger } from '../utils/logger.js';
 
 export class MockService {
   private store: MockStore;
+
   private mode: 'record' | 'replay' | 'auto';
+
   private autoApprove: boolean;
 
   constructor(private opts: AtticusOptions) {
@@ -81,7 +85,7 @@ export class MockService {
         status: existing.status,
         headers: existing.headers,
         body: existing.body
-      } as any);
+      });
       return true;
     }
 
@@ -91,7 +95,7 @@ export class MockService {
       await route.fulfill({
         status: 500,
         body: JSON.stringify({ error: 'Atticus missing mock', method, url })
-      } as any);
+      });
       return true;
     }
 
@@ -101,8 +105,10 @@ export class MockService {
 
     try {
       realResponse = await route.fetch();
-    } catch (err: any) {
-      logger.error('route.fetch() failed:', err && err.message ? err.message : err);
+    } catch (err: unknown) {
+      if (err instanceof Error) {
+        logger.error('route.fetch() failed:', err && err.message ? err.message : err);
+      }
       throw err;
     }
 
@@ -127,7 +133,7 @@ export class MockService {
       status: stored.status,
       headers: stored.headers,
       body: stored.body
-    } as any);
+    });
 
     return true
   }
