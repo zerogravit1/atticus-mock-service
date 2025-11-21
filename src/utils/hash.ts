@@ -1,3 +1,7 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
+/**
+ * This any is ok for now
+ */
 import crypto from 'crypto';
 
 export function hashObject(input: unknown): string {

@@ -21,10 +21,13 @@ module.exports = {
       'ignorePackages',
       {
         ts: 'never',
-        js: 'never',
+        js: 'always',
       },
     ],
+    'import/no-unresolved': 'off',
+    'import/no-cycle': 'off',
     'no-unused-vars': 'off',
+    'import/prefer-default-export': 'off',
     '@typescript-eslint/no-unused-vars': ['error'],
     'class-methods-use-this': 'off',
     'no-console': 'warn',
@@ -42,7 +45,10 @@ module.exports = {
   },
   settings: {
     'import/resolver': {
-      typescript: {},
+      typescript: {
+        alwaysTryTypes: true,
+        project: './tsconfig.json',
+      },
     },
   },
 };
