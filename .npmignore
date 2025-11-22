@@ -1,7 +1,11 @@
 src/
-node_modules/
-.vscode/
-*.log
-*.tsbuildinfo
 tests/
-.github/
+examples/
+.eslintrc.cjs
+.prettierrc
+tsconfig.json
+README-dev.md
+.vscode/
+node_modules/
+dist/
+*.log

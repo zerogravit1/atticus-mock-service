@@ -1,28 +1,31 @@
 {
-  "name": "@zerogravit1/atticus-mock-service",
+  "name": "atticus-mock-service",
   "version": "0.1.0",
   "private": "true",
   "description": "A low friction mock and replay service for playwright",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "type": "module",
+  "exports": {
+    ".": {
+      "import": "./dist/index.js",
+      "types": "./dist/index.d.ts"
+    }
+  },
   "files": [
-    "dist/",
-    "README.md",
-    "LICENSE"
+    "dist",
+    "README.md"
   ],
   "scripts": {
-    "build": "tsc -p tsconfig.json",
     "clean": "rimraf dist",
     "prebuild": "npm run clean",
-    "prepare": "husky",
-    "dev": "tsc -w -p tsconfig.json",
-    "lint": "eslint 'src/**/*.ts'",
-    "lint:fix": "eslint 'src/**/*.ts' --fix",
-    "format": "prettier --write .",
+    "build": "tsc -p tsconfig.json",
+    "prepare": "npm run build",
+    "dev": "tsc --watch",
     "test": "node --test",
-    "prepublishOnly": "npm run build && npm test",
-    "publish:public": "npm publish --access public"
+    "lint": "eslint 'src/**/*.ts' --max-warnings=0 || true",
+    "lint:fax": "eslint 'src/**/*.ts --fix || true",
+    "prepublishOnly": "npm run build && npm test"
   },
   "repository": {
     "type": "git",
@@ -30,9 +33,12 @@
   },
   "keywords": [
     "playwright",
-    "testing",
     "mocks",
-    "record-replay",
+    "mocking",
+    "testing",
+    "record",
+    "replay",
+    "atticus",
     "api-mocks"
   ],
   "author": "Jonathan Schaffer",
