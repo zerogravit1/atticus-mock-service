@@ -1,0 +1,11 @@
+src/
+tests/
+examples/
+.eslintrc.cjs
+.prettierrc
+tsconfig.json
+README-dev.md
+.vscode/
+node_modules/
+dist/
+*.log

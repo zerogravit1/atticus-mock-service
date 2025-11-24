@@ -1,0 +1,70 @@
+{
+  "name": "@zerograviti/atticus-mock-service",
+  "version": "0.1.2",
+  "description": "A low friction mock and replay service for playwright",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "type": "module",
+  "exports": {
+    ".": {
+      "import": "./dist/index.js",
+      "types": "./dist/index.d.ts"
+    }
+  },
+  "files": [
+    "dist",
+    "README.md"
+  ],
+  "scripts": {
+    "clean": "rimraf dist",
+    "prebuild": "npm run clean",
+    "build": "tsc -p tsconfig.json",
+    "prepare": "npm run build",
+    "dev": "tsc --watch",
+    "test": "node --test",
+    "lint": "eslint 'src/**/*.ts' --max-warnings=0 || true",
+    "lint:fax": "eslint 'src/**/*.ts --fix || true",
+    "prepublishOnly": "npm run build && npm test"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/zerogravit1/atticus-mock-service.git"
+  },
+  "keywords": [
+    "playwright",
+    "mocks",
+    "mocking",
+    "testing",
+    "record",
+    "replay",
+    "atticus",
+    "api-mocks"
+  ],
+  "author": "Jonathan Schaffer",
+  "license": "GPL-3.0-only",
+  "bugs": {
+    "url": "https://github.com/zerogravit1/atticus-mock-service/issues"
+  },
+  "homepage": "https://github.com/zerogravit1/atticus-mock-service#readme",
+  "engines": {
+    "node": ">==16"
+  },
+  "dependencies": {
+    "fs-extra": "^11.3.2",
+    "playwright-core": "^1.56.1"
+  },
+  "devDependencies": {
+    "@types/fs-extra": "^11.0.4",
+    "@types/node": "^24.10.1",
+    "@typescript-eslint/eslint-plugin": "^8.47.0",
+    "@typescript-eslint/parser": "^8.47.0",
+    "eslint": "^8.57.1",
+    "eslint-config-airbnb-base": "^15.0.0",
+    "eslint-config-prettier": "^10.1.8",
+    "eslint-import-resolver-typescript": "^4.4.4",
+    "eslint-plugin-import": "^2.32.0",
+    "prettier": "^3.6.2",
+    "rimraf": "^6.1.0",
+    "typescript": "^5.9.3"
+  }
+}
