@@ -1,99 +1,97 @@
-import { test, expect } from 'vitest';
+import { describe, test, expect } from 'vitest';
 import fs from 'node:fs/promises';
 import nodeFs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
 import { MockStore } from '../../core/MockStore.js';
+import type { StoredResponse } from '../../types.js';
 import { logger } from '../../utils/logger.js';
 
-test('MockStore returns file path', async () => {
-  const tmpDir = await fs.mkdtemp(path.join(os.tmpdir(), 'atticus-test-'));
-  const store = new MockStore(tmpDir);
-  const sig = 'test-signature-001';
+describe('MockStore', () => {
+  test('has() reflects presence/absence of a mock file', async () => {
+    const tmpDir = await fs.mkdtemp(path.join(os.tmpdir(), 'atticus-test-'));
+    const store = new MockStore(tmpDir);
+    const sig = 'test-signature-001';
+    const filePath = path.join(tmpDir, `${sig}.json`);
 
-  const expectedPath = path.join(tmpDir, `${sig}.json`);
-  nodeFs.writeFileSync(expectedPath, '{"status":200}');
+    nodeFs.writeFileSync(filePath, '{"status":200}');
 
-  // assert.equal(store.has(sig), true);
-  expect(store.has(sig)).toBe(true);
+    expect(store.has(sig)).toBe(true);
+    expect(store.has('other-sig')).toBe(false);
+  });
 
-  // assert.equal(store.has('other-sig'), false);
-  expect(store.has('other-sig')).toBe(false);
+  test('save() and read() round-trip a stored response', async () => {
+    const tmpDir = await fs.mkdtemp(path.join(os.tmpdir(), 'atticus-test-'));
+    const store = new MockStore(tmpDir);
+    const sig = 'test-signature-002';
+
+    const mock = {
+      status: 200,
+      headers: { 'content-type': 'application/json' },
+      body: '{"ok":true}'
+    };
+
+    store.save(sig, mock)
+    const loaded = store.read(sig);
+
+    expect(loaded).toEqual(mock);
+  });
+
+  test('read() returns null when file is missing', async () => {
+    const tmpDir = await fs.mkdtemp(path.join(os.tmpdir(), 'atticus-test-'));
+    const store = new MockStore(tmpDir);
+    const loaded = store.read('nonexistent-sig');
+
+    expect(loaded).toEqual(null);
+  });
+
+  test('read() logs and returns null on corrupt JSON', async () => {
+    const tmpDir = await fs.mkdtemp(path.join(os.tmpdir(), 'atticus-test-'));
+    const store = new MockStore(tmpDir);
+    const sig = 'corrupt-json-sig';
+    const filePath = path.join(tmpDir, `${sig}.json`);
+    
+    nodeFs.writeFileSync(filePath, '{ this is not valid JSON');
+
+    const originalError = logger.error;
+    let loggedArgs: unknown[] | null = null;
+
+    logger.error = (...args: unknown[]) => { loggedArgs = args; };
+
+    const loaded = store.read(sig);
+    
+    logger.error = originalError;
+
+    expect(loaded).toBeNull();
+    expect(loggedArgs).toBeTruthy();
+    expect(loggedArgs?.[0]).toBe('Failed to read mock file');
+  });
+
+  test('list() returns a list of signatures', async () => {
+    const tmpDir = await fs.mkdtemp(path.join(os.tmpdir(), 'atticus-test-'));
+    const store = new MockStore(tmpDir);
+    const sig = 'test-signature-004';
+
+    const mock = {
+      status: 200,
+      headers: { 'content-type': 'application/json' },
+      body: '{"ok":true}'
+    };
+
+    store.save(sig, mock);
+
+    const list = store.list();
+
+    expect(list).toEqual([sig]);
+  });
 });
 
-test('MockStore writes and reads mocks from disk', async () => {
-  const tmpDir = await fs.mkdtemp(path.join(os.tmpdir(), 'atticus-test-'));
-  const store = new MockStore(tmpDir);
-  const sig = 'test-signature-002';
 
-  const mock = {
-    status: 200,
-    headers: { 'content-type': 'application/json' },
-    body: '{"ok":true}'
-  };
 
-  store.save(sig, mock)
-  const loaded = store.read(sig);
 
-  // assert.deepEqual(loaded, mock);
-  expect(loaded).toEqual(mock);
-});
 
-test('MockStore fails to read mock from disk', async () => {
-  const tmpDir = await fs.mkdtemp(path.join(os.tmpdir(), 'atticus-test-'));
-  const store = new MockStore(tmpDir);
-  const sig = 'test-signature-003';
 
-  const loaded = store.read(sig);
 
-  // assert.deepEqual(loaded, null);
-  expect(loaded).toEqual(null);
-});
 
-test('MockStore returns null and logs error on corrupt JSON', async () => {
-  const tmpDir = await fs.mkdtemp(path.join(os.tmpdir(), 'atticus-test-'));
-  const store = new MockStore(tmpDir);
-  const sig = 'corrupt-json-sig';
 
-  const filePath = path.join(tmpDir, `${sig}.json`);
-  
-  nodeFs.writeFileSync(filePath, '{ this is not valid JSON');
 
-  const originalError = logger.error;
-  let loggedArgs: unknown[] | null = null;
-
-  logger.error = (...args: unknown[]) => {
-    loggedArgs = args;
-  };
-
-  const loaded = store.read(sig);
-
-  // Restore logger
-  logger.error = originalError;
-
-  // assert.equal(loaded, null);
-  expect(loaded).toBe(null)
-  // assert.ok(loggedArgs, 'logger.error should have been called');
-  expect(loggedArgs, 'logger.error should have been called').toBeTruthy();
-  // assert.equal(loggedArgs?.[0], 'Failed to read mock file');
-  expect(loggedArgs?.[0]).toBe('Failed to read mock file');
-});
-
-test('MockStore lists mocks from disk', async () => {
-  const tmpDir = await fs.mkdtemp(path.join(os.tmpdir(), 'atticus-test-'));
-  const store = new MockStore(tmpDir);
-  const sig = 'test-signature-004';
-
-  const mock = {
-    status: 200,
-    headers: { 'content-type': 'application/json' },
-    body: '{"ok":true}'
-  };
-
-  store.save(sig, mock);
-
-  const list = store.list();
-
-  // assert.deepEqual(list, [sig]);
-  expect(list).toEqual([sig]);
-});

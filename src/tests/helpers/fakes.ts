@@ -1,18 +1,33 @@
-import type { Request as PWRequest, Route } from 'playwright-core';
-import { StoredResponse } from '../../types';
+// import type { Request as PWRequest, Route } from 'playwright-core';
+import type { StoredResponse } from '../../types';
 
-export function createFakeRequest(overrides: Partial<PWRequest> = {}): any {
+export function createFakeRequest(
+  overrides: Partial<{
+    resourceType: () => string;
+    url: () => string;
+    method: () => string;
+    headers: () => Record<string, string>;
+    postData: () => string | null;
+  }> = {},
+): any {
   return {
     resourceType: () => 'fetch',
-    url: () => 'https://example.com/api/users',
+    url: () => 'https://examples.com/api/users',
     method: () => 'GET',
-    headers: () => ({ 'content-typ[e': 'applications/json' }),
+    headers: () => ({ 'content-type': 'application/json' }),
     postData: () => '',
     ...overrides,
   };
 }
 
-export function createFakeRoute(overrides: Record<string, unknown> = {}): any {
+export function createFakeRoute(
+  overrides: Partial<{
+    fetch: (...args: any[]) => Promise<any>;
+    fulfill: (args: any) => Promise<void>;
+    continue: () => Promise<void>;
+    abort: () => Promise<void>;
+  }> = {},
+): any {
   let fulfilledArgs: any = null;
 
   const base = {
