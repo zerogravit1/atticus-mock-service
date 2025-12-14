@@ -7,7 +7,7 @@ export function safeParseJson(raw: string) {
 }
 
 export function parseBodyFromContentType(contentType: string | undefined, raw: string) {
-  if (!raw) return { rawBody: '', parseBody: undefined };
+  if (!raw) return { rawBody: '', parsedBody: undefined };
 
   const ct = (contentType ?? '').toLowerCase();
 
