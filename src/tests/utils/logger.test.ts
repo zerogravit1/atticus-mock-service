@@ -1,3 +1,4 @@
+/* eslint-disable no-console */
 import { describe, test, expect } from 'vitest';
 import { logger } from '../../utils/logger.js';
 
@@ -83,11 +84,3 @@ describe('logger', () => {
     }
   });
 });
-
-
-
-
-
-
-
-
