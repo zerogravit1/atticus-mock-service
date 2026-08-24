@@ -28,8 +28,8 @@
     "test:watch": "vitest",
     "test:coverage": "vitest run --coverage",
 
-    "lint": "eslint 'src/**/*.ts' --max-warnings=0 || true",
-    "lint:fax": "eslint 'src/**/*.ts --fix || true",
+    "lint": "eslint 'src/**/*.ts' --max-warnings=0",
+    "lint:fix": "eslint 'src/**/*.ts' --fix",
 
     "prepublishOnly": "npm run build && npm test"
   },
@@ -54,7 +54,7 @@
   },
   "homepage": "https://github.com/zerogravit1/atticus-mock-service#readme",
   "engines": {
-    "node": ">==16"
+    "node": ">=24"
   },
   "dependencies": {
     "fs-extra": "^11.3.2",

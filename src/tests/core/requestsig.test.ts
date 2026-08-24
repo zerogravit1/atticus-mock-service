@@ -1,6 +1,6 @@
 // import test from 'node:test';
 // import assert from 'node:assert';
-import { describe, test, beforeEach, expect } from 'vitest';
+import { test, expect } from 'vitest';
 
 import { StoredRequestMeta } from '../../types.js';
 import { buildSignature } from '../../core/RequestSignature.js';

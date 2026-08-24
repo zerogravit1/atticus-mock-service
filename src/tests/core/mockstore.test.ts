@@ -4,7 +4,6 @@ import nodeFs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
 import { MockStore } from '../../core/MockStore.js';
-import type { StoredResponse } from '../../types.js';
 import { logger } from '../../utils/logger.js';
 
 describe('MockStore', () => {

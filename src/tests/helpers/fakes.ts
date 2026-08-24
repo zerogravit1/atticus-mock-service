@@ -1,15 +1,31 @@
-// import type { Request as PWRequest, Route } from 'playwright-core';
+import { Request as PWRequest, Route } from 'playwright-core';
 import type { StoredResponse } from '../../types';
 
+type FakeRequestOverrides = Partial<
+  Pick<PWRequest, 'resourceType' | 'url' | 'method' | 'headers' | 'postData'>
+>;
+
+type FakeResponse = Pick<
+  Awaited<ReturnType<Route['fetch']>>,
+  'status' | 'headers' | 'text'
+>;
+
+export type FulfillOptions = Exclude<
+  Parameters<Route['fulfill']>[0],
+  undefined
+>;
+
+type FakeRouteOverrides = {
+  request?: () => PWRequest;
+  fetch?: () => Promise<FakeResponse>;
+  fulfill?: (args: FulfillOptions) => Promise<void>;
+  continue?: () => Promise<void>;
+  abort?: () => Promise<void>;
+}
+
 export function createFakeRequest(
-  overrides: Partial<{
-    resourceType: () => string;
-    url: () => string;
-    method: () => string;
-    headers: () => Record<string, string>;
-    postData: () => string | null;
-  }> = {},
-): any {
+  overrides: FakeRequestOverrides = {},
+): PWRequest {
   return {
     resourceType: () => 'fetch',
     url: () => 'https://examples.com/api/users',
@@ -17,38 +33,42 @@ export function createFakeRequest(
     headers: () => ({ 'content-type': 'application/json' }),
     postData: () => '',
     ...overrides,
-  };
+  } as unknown as PWRequest;
 }
 
 export function createFakeRoute(
-  overrides: Partial<{
-    fetch: (...args: any[]) => Promise<any>;
-    fulfill: (args: any) => Promise<void>;
-    continue: () => Promise<void>;
-    abort: () => Promise<void>;
-  }> = {},
-): any {
-  let fulfilledArgs: any = null;
+  overrides: FakeRouteOverrides = {},
+): Route {
+  let fulfilledArgs: FulfillOptions | null = null;
 
   const base = {
-    async fetch() {
+    request: () => createFakeRequest(),
+    async fetch(): Promise<FakeResponse> {
       return {
         status: () => 200,
         headers: () => ({ 'content-type': 'application/json' }),
         text: async () => '{"ok":true}',
       };
     },
-    async fulfill(args: any) {
+
+    async fulfill(args: FulfillOptions) {
       fulfilledArgs = args;
     },
-    async continue() {},
-    async abort() {},
+
+    async continue() {
+      return undefined;
+    },
+
+    async abort() {
+      return undefined;
+    },
+
     get fulfilled() {
       return fulfilledArgs;
     },
   };
 
-  return { ...base, ...overrides };
+  return { ...base, ...overrides } as unknown as Route;
 }
 
 export function createFakeStore() {
@@ -56,10 +76,13 @@ export function createFakeStore() {
 
   return {
     read: (sig: string) => mocks.get(sig) ?? null,
+
     save: (sig: string, res: StoredResponse) => {
       mocks.set(sig, res);
     },
+
     list: () => Array.from(mocks.keys()),
-    _mocks: mocks,
+
+    size: () => mocks.size,
   };
 }
