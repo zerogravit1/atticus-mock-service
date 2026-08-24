@@ -1,4 +1,4 @@
-import { Request as PWRequest, Route, Response as PWResponse } from 'playwright-core';
+import { Request as PWRequest, Route } from 'playwright-core';
 import type { StoredResponse } from '../../types';
 
 type FakeRequestOverrides = Partial<
@@ -16,6 +16,7 @@ export type FulfillOptions = Exclude<
 >;
 
 type FakeRouteOverrides = {
+  request?: () => PWRequest;
   fetch?: () => Promise<FakeResponse>;
   fulfill?: (args: FulfillOptions) => Promise<void>;
   continue?: () => Promise<void>;
@@ -41,6 +42,7 @@ export function createFakeRoute(
   let fulfilledArgs: FulfillOptions | null = null;
 
   const base = {
+    request: () => createFakeRequest(),
     async fetch(): Promise<FakeResponse> {
       return {
         status: () => 200,

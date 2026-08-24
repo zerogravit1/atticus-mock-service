@@ -57,12 +57,11 @@ describe('MockService', () => {
       expect(registeredHandler, 'route handler should be registered').toBeTruthy();
 
       let continued = false;
-      const fakeRoute = {
-        request: () => createFakeRequest(),
+      const fakeRoute = createFakeRoute({
         continue: async () => {
           continued = true;
         },
-      };
+      });
 
       await registeredHandler!(fakeRoute);
 
@@ -90,11 +89,10 @@ describe('MockService', () => {
       let continued = false;
       let aborted = false;
 
-      const fakeRoute = {
-        request: () => createFakeRequest(),
+      const fakeRoute = createFakeRoute({
         continue: async () => { continued = true; },
         abort: async () => { aborted = true; },
-      };
+      });
 
       await service.attachToPage(fakePage as unknown as Page);
 
@@ -124,14 +122,13 @@ describe('MockService', () => {
       let continued = false;
       let aborted = false;
 
-      const fakeRoute = {
-        request: () => createFakeRequest(),
+      const fakeRoute = createFakeRoute({
         continue: async () => {
           continued = true;
           throw new Error('continue failed');
         },
         abort: async () => { aborted = true; },
-      };
+      });
 
       await service.attachToPage(fakePage as unknown as Page);
       await registeredHandler!(fakeRoute);
@@ -160,9 +157,9 @@ describe('MockService', () => {
       });
 
       const request = createFakeRequest();
-      const handled = await asTestable(service).handleRoute(route, request);
+      const handledPromise = await asTestable(service).handleRoute(route, request);
 
-      await expect(handled).rejects.toThrow(/network failed/);
+      await expect(handledPromise).rejects.toThrow(/network failed/);
     });
   });
 
@@ -180,25 +177,25 @@ describe('MockService', () => {
 
     const staticTypes = ['document', 'script', 'stylesheet', 'image'] as const;
 
-    for (const type of staticTypes) {
+    staticTypes.forEach((type) => {
       test(`skips ${type} requests`, async () => {
         let fulfilled = false;
 
         const route = createFakeRoute({
-          fulfill: async () => { fulfilled = true; },
+          fulfill: async () => { fulfilled = true },
         });
 
         const request = createFakeRequest({
           resourceType: () => type,
         });
-
+        
         const handled = await asTestable(service).handleRoute(route, request);
 
         expect(handled).toBe(false);
         expect(fulfilled).toBe(false);
         expect(fakeStore.size()).toBe(0);
       });
-    }
+    });
 
     test('replays stored mock in replay mode when a mock exists', async () => {
       const stored: StoredResponse = {
@@ -273,17 +270,23 @@ describe('MockService', () => {
         mockDir: 'unused'
       } as AtticusOptions);
 
-      const fakeStore = {
+      const replayStore = {
         read: () => null,
         save: () => {},
         list: () => [],
       };
 
-      asTestable(service).store = fakeStore;
+      asTestable(service).store = replayStore;
 
-      let fulfilledArgs: FulfillOptions | null = null;
+      const captured: {
+        fulfilledArgs: FulfillOptions | null;
+      } = {
+        fulfilledArgs: null
+      };
+
+      const { fulfilledArgs } = captured;
       const route = createFakeRoute({
-        fulfill: async (args: FulfillOptions) => { fulfilledArgs = args; },
+        fulfill: async (args: FulfillOptions) => { captured.fulfilledArgs = args; },
         fetch: async () => { throw new Error('fetch should not be called in replay mode'); },
       });
 
@@ -295,7 +298,16 @@ describe('MockService', () => {
       const handled = await asTestable(service).handleRoute(route, request);
 
       expect(handled).toBe(true);
+
+      if (fulfilledArgs === null) {
+        throw new Error('Expected route.fulfill to be called');
+      }
+
       expect(fulfilledArgs.status).toBe(500);
+
+      if (typeof fulfilledArgs.body !== 'string') {
+        throw new Error('expected route.fulfill body to be a string');
+      }
 
       const body = JSON.parse(fulfilledArgs.body);
 
@@ -321,7 +333,11 @@ describe('MockService', () => {
       };
       asTestable(service).store = store;
 
-      let fulfilledArgs: FulfillOptions | null = null;
+      const captured: {
+        fulfilledArgs: FulfillOptions | null;
+      } = {
+        fulfilledArgs: null,
+      };
 
       const route = createFakeRoute({
         fetch: async () => ({
@@ -329,7 +345,7 @@ describe('MockService', () => {
           headers: () => ({ 'content-type': 'application/json' }),
           text: async () => '{"ok":true}',
         }),
-        fulfill: async (args: FulfillOptions) => { fulfilledArgs = args; },
+        fulfill: async (args: FulfillOptions) => { captured.fulfilledArgs = args; },
       });
 
       const request = createFakeRequest({
@@ -341,10 +357,20 @@ describe('MockService', () => {
 
       expect(handled).toBe(true);
 
+      if (saved.res === undefined) {
+        throw new Error('Expected store.save to be called');
+      }
+
       expect(saved.res, 'expected store.save to be called').toBeTruthy();
       expect(saved.res!.status).toBe(201);
       expect(saved.res!.headers).toEqual({ 'content-type': 'application/json' });
       expect(saved.res!.body).toBe('{"ok":true}');
+
+      const { fulfilledArgs } = captured;
+
+      if (fulfilledArgs === null) {
+        throw new Error('Expected route.fulfill to be called');
+      }
 
       expect(fulfilledArgs.status).toBe(201);
       expect(fulfilledArgs.body).toBe('{"ok":true}');
