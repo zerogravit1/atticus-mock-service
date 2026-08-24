@@ -1,18 +1,36 @@
 import { describe, test, beforeEach, expect } from 'vitest';
+import type { Page, Request as PWRequest, Route } from 'playwright-core';
 import { MockService } from '../../core/MockService.js';
 import type { AtticusOptions, StoredResponse } from '../../types';
-import { createFakeStore, createFakeRoute, createFakeRequest } from '../helpers/fakes.js'
+import { createFakeStore, createFakeRoute, createFakeRequest, type FulfillOptions } from '../helpers/fakes.js'
 import { logger } from '../../utils/logger.js';
 
-type RouteHandler = (route: any) => Promise<void>;
+type RouteHandler = (route: Route) => Promise<void>;
 
 let service: MockService;
 let fakeStore: ReturnType<typeof createFakeStore>;
 
+type TestStore = {
+  read: (sig: string) => StoredResponse | null;
+  save: (sig: string, res: StoredResponse) => void;
+  list: () => string[];
+}
+
+type TestableMockService = {
+  store: TestStore;
+  handleRoute: (
+    route: Route,
+    request: PWRequest,
+  ) => Promise<boolean>;
+};
+
+const asTestable = (mockService: MockService): TestableMockService =>
+  mockService as unknown as TestableMockService;
+
 describe('MockService', () => {
   describe('attachToPage', () => {
     test('registers route and calls handleRoute, continuing when not handled', async () => {
-      const service = new MockService({
+      service = new MockService({
         recordMode: 'auto',
         mockDir: 'unused',
       } as AtticusOptions);
@@ -28,12 +46,12 @@ describe('MockService', () => {
       };
 
       let handleRouteCalled = false;
-      (service as any).handleRoute = async () => {
+      asTestable(service).handleRoute = async () => {
         handleRouteCalled = true;
         return false;
       };
 
-      await service.attachToPage(fakePage as any);
+      await service.attachToPage(fakePage as unknown as Page);
 
       expect(registeredPattern).toBe('**/*');
       expect(registeredHandler, 'route handler should be registered').toBeTruthy();
@@ -53,7 +71,7 @@ describe('MockService', () => {
     });
 
     test('logs and continues when handleRoute throws', async () => {
-      const service = new MockService({
+      service = new MockService({
         recordMode: 'auto',
         mockDir: 'unused',
       } as AtticusOptions);
@@ -65,7 +83,7 @@ describe('MockService', () => {
         },
       };
 
-      (service as any).handleRoute = async () => {
+      asTestable(service).handleRoute = async () => {
         throw new Error('fail');
       };
 
@@ -78,7 +96,7 @@ describe('MockService', () => {
         abort: async () => { aborted = true; },
       };
 
-      await service.attachToPage(fakePage as any);
+      await service.attachToPage(fakePage as unknown as Page);
 
       await registeredHandler!(fakeRoute);
 
@@ -87,7 +105,7 @@ describe('MockService', () => {
     });
 
     test('aborts when handleRoute and continue both fail', async () => {
-      const service = new MockService({
+      service = new MockService({
         recordMode: 'auto',
         mockDir: 'unused',
       } as AtticusOptions);
@@ -99,7 +117,7 @@ describe('MockService', () => {
         },
       };
 
-      (service as any).handleRoute = async () => {
+      asTestable(service).handleRoute = async () => {
         throw new Error('fail');
       };
 
@@ -115,7 +133,7 @@ describe('MockService', () => {
         abort: async () => { aborted = true; },
       };
 
-      await service.attachToPage(fakePage as any);
+      await service.attachToPage(fakePage as unknown as Page);
       await registeredHandler!(fakeRoute);
 
       expect(continued).toBe(true);
@@ -123,7 +141,7 @@ describe('MockService', () => {
     });
 
     test('rethrows when route.fetch fails in record/auto mode', async () => {
-      const service = new MockService({
+      service = new MockService({
         recordMode: 'auto',
         mockDir: 'unused',
       } as AtticusOptions);
@@ -133,7 +151,7 @@ describe('MockService', () => {
         save: () => {},
         list: () => [],
       };
-      (service as any).store = store;
+      asTestable(service).store = store;
 
       const route = createFakeRoute({
         fetch: async () => {
@@ -142,8 +160,9 @@ describe('MockService', () => {
       });
 
       const request = createFakeRequest();
+      const handled = await asTestable(service).handleRoute(route, request);
 
-      await expect((service as any).handleRoute(route, request)).rejects.toThrow(/network failed/);
+      await expect(handled).rejects.toThrow(/network failed/);
     });
   });
 
@@ -156,7 +175,7 @@ describe('MockService', () => {
 
       fakeStore = createFakeStore();
 
-      (service as any).store = fakeStore;
+      asTestable(service).store = fakeStore;
     });
 
     const staticTypes = ['document', 'script', 'stylesheet', 'image'] as const;
@@ -173,11 +192,11 @@ describe('MockService', () => {
           resourceType: () => type,
         });
 
-        const handled = await (service as any).handleRoute(route, request);
+        const handled = await asTestable(service).handleRoute(route, request);
 
         expect(handled).toBe(false);
         expect(fulfilled).toBe(false);
-        expect(fakeStore._mocks.size).toBe(0);
+        expect(fakeStore.size()).toBe(0);
       });
     }
 
@@ -198,11 +217,11 @@ describe('MockService', () => {
         save: () => {},
         list: () => [],
       };
-      (service as any).store = store;
+      asTestable(service).store = store;
 
-      let fulfilledArgs: any = null;
+      let fulfilledArgs: FulfillOptions | null = null;
       const route = createFakeRoute({
-        fulfill: async (args: any) => { fulfilledArgs = args; },
+        fulfill: async (args: FulfillOptions) => { fulfilledArgs = args; },
         fetch: async () => { throw new Error('fetch should not be called in replay mode when mock exists'); },
       });
 
@@ -211,7 +230,7 @@ describe('MockService', () => {
         url: () => 'https://example.com/api/users',
       });
 
-      const handled = await (service as any).handleRoute(route, request);
+      const handled = await asTestable(service).handleRoute(route, request);
 
       expect(handled).toBe(true);
       expect(fulfilledArgs).toEqual(stored);
@@ -229,11 +248,11 @@ describe('MockService', () => {
         save: () => {},
         list: () => [],
       };
-      (service as any).store = store;
+      asTestable(service).store = store;
 
-      let fulfilledArgs: any = null;
+      let fulfilledArgs: FulfillOptions | null = null;
       const route = createFakeRoute({
-        fulfill: async (args: any) => { fulfilledArgs = args; },
+        fulfill: async (args: FulfillOptions) => { fulfilledArgs = args; },
         fetch: async () => { throw new Error('fetch should not be called whe mock exists in auto mode')},
       });
 
@@ -242,14 +261,14 @@ describe('MockService', () => {
         url: () => 'https://example.com/api/users',
       });
 
-      const handled = await (service as any).handleRoute(route, request);
+      const handled = await asTestable(service).handleRoute(route, request);
 
       expect(handled).toBe(true);
       expect(fulfilledArgs).toEqual(stored);
     });
 
     test('returns 500 when mock is missing in replay mode and does not call fetch', async () => {
-      const service = new MockService({
+      service = new MockService({
         recordMode: 'replay',
         mockDir: 'unused'
       } as AtticusOptions);
@@ -260,11 +279,11 @@ describe('MockService', () => {
         list: () => [],
       };
 
-      (service as any).store = fakeStore;
+      asTestable(service).store = fakeStore;
 
-      let fulfilledArgs: any = null;
+      let fulfilledArgs: FulfillOptions | null = null;
       const route = createFakeRoute({
-        fulfill: async (args: any) => { fulfilledArgs = args; },
+        fulfill: async (args: FulfillOptions) => { fulfilledArgs = args; },
         fetch: async () => { throw new Error('fetch should not be called in replay mode'); },
       });
 
@@ -273,7 +292,7 @@ describe('MockService', () => {
         url: () => 'https://example.com/api/users',
       });
 
-      const handled = await (service as any).handleRoute(route, request);
+      const handled = await asTestable(service).handleRoute(route, request);
 
       expect(handled).toBe(true);
       expect(fulfilledArgs.status).toBe(500);
@@ -286,7 +305,7 @@ describe('MockService', () => {
     });
 
     test('triggers live fetch and recording into auto mode when mock is missing', async () => {
-      const service = new MockService({
+      service = new MockService({
         recordMode: 'auto',
         mockDir: 'unused',
       } as AtticusOptions);
@@ -300,9 +319,9 @@ describe('MockService', () => {
         },
         list: () => [],
       };
-      (service as any).store = store;
+      asTestable(service).store = store;
 
-      let fulfilledArgs: any = null;
+      let fulfilledArgs: FulfillOptions | null = null;
 
       const route = createFakeRoute({
         fetch: async () => ({
@@ -310,7 +329,7 @@ describe('MockService', () => {
           headers: () => ({ 'content-type': 'application/json' }),
           text: async () => '{"ok":true}',
         }),
-        fulfill: async (args: any) => { fulfilledArgs = args; },
+        fulfill: async (args: FulfillOptions) => { fulfilledArgs = args; },
       });
 
       const request = createFakeRequest({
@@ -318,7 +337,7 @@ describe('MockService', () => {
         url: () => 'https://example.com/api/users',
       });
 
-      const handled = await (service as any).handleRoute(route, request);
+      const handled = await asTestable(service).handleRoute(route, request);
 
       expect(handled).toBe(true);
 
@@ -334,7 +353,7 @@ describe('MockService', () => {
 
   describe('helpers', () => {
     test('listMocks proxies to store.list', () => {
-      const service = new MockService({
+      service = new MockService({
         recordMode: 'auto',
         mockDir: 'unused',
       } as AtticusOptions)
@@ -344,7 +363,7 @@ describe('MockService', () => {
         save: () => {},
         list: () => ['sig-1', 'sig-2'],
       };
-      (service as any).store = store;
+      asTestable(service).store = store;
 
       const result = service.listMocks();
 
@@ -352,7 +371,7 @@ describe('MockService', () => {
     });
 
     test('approve logs the signature and does not throw', () => {
-      const service = new MockService({
+      service = new MockService({
         recordMode: 'auto',
         mockDir: 'unused',
       } as AtticusOptions);
