@@ -157,7 +157,7 @@ describe('MockService', () => {
       });
 
       const request = createFakeRequest();
-      const handledPromise = await asTestable(service).handleRoute(route, request);
+      const handledPromise = asTestable(service).handleRoute(route, request);
 
       await expect(handledPromise).rejects.toThrow(/network failed/);
     });
@@ -284,7 +284,7 @@ describe('MockService', () => {
         fulfilledArgs: null
       };
 
-      const { fulfilledArgs } = captured;
+      
       const route = createFakeRoute({
         fulfill: async (args: FulfillOptions) => { captured.fulfilledArgs = args; },
         fetch: async () => { throw new Error('fetch should not be called in replay mode'); },
@@ -298,6 +298,8 @@ describe('MockService', () => {
       const handled = await asTestable(service).handleRoute(route, request);
 
       expect(handled).toBe(true);
+
+      const { fulfilledArgs } = captured;
 
       if (fulfilledArgs === null) {
         throw new Error('Expected route.fulfill to be called');
