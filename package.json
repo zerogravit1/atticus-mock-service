@@ -1,6 +1,6 @@
 {
   "name": "@zerograviti/atticus-mock-service",
-  "version": "0.1.2",
+  "version": "0.1.3",
   "description": "A low friction mock and replay service for playwright",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
@@ -21,16 +21,12 @@
     "build": "tsc -p tsconfig.json",
     "prepare": "npm run build",
     "dev": "tsc --watch",
-
     "test:node": "npm run build && node --test dist/tests/**/*.test.js",
-
     "test": "vitest run",
     "test:watch": "vitest",
     "test:coverage": "vitest run --coverage",
-
     "lint": "eslint 'src/**/*.ts' --max-warnings=0",
     "lint:fix": "eslint 'src/**/*.ts' --fix",
-
     "prepublishOnly": "npm run build && npm test"
   },
   "repository": {
