@@ -40,3 +40,10 @@ Notes:
 
 Contributing and publishing:
 - repo contains `ci` workflow that runs lint/build/test on PRs.
+
+## License
+
+Copyright © 2026 Jonathan Schaffer.
+
+Licensed under the Apache License, Version 2.0.
+See [LICENSE](LICENSE) for details.
